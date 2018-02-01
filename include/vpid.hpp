@@ -22,11 +22,10 @@
 
 class Invvpid
 {
-    private:
+    public:
         uint64  vpid;
         uint64  addr;
 
-    public:
         ALWAYS_INLINE
         inline Invvpid (unsigned long v, mword a) : vpid (v), addr (a) {}
 };
@@ -44,6 +43,7 @@ class Vpid
         ALWAYS_INLINE
         static inline void flush (Type t, unsigned long vpid, mword addr = 0)
         {
-            asm volatile ("invvpid %0, %1" : : "m" (Invvpid (vpid, addr)), "r" (static_cast<mword>(t)) : "cc");
+            Invvpid invvpid(vpid, addr);
+            asm volatile ("invvpid %0, %1" : : "m" (invvpid), "r" (static_cast<mword>(t)) : "cc");
         }
 };

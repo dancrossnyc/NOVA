@@ -38,9 +38,9 @@ Pci::Pci (unsigned r, unsigned l) : List<Pci> (list), reg_base (hwdev_addr -= PA
 {
     Pd::kern.Space_mem::insert (reg_base, 0, Hpt::HPT_NX | Hpt::HPT_G | Hpt::HPT_UC | Hpt::HPT_W | Hpt::HPT_P, cfg_base + (rid << PAGE_BITS));
 
-    for (unsigned i = 0; i < sizeof map / sizeof *map; i++)
-        if (read<uint16>(REG_VID) == map[i].vid && read<uint16>(REG_DID) == map[i].did)
-            (this->*map[i].func)();
+    for (auto &m : map)
+        if (read<uint16>(REG_VID) == m.vid && read<uint16>(REG_DID) == m.did)
+            (this->*m.func)();
 }
 
 void Pci::init (unsigned b, unsigned l)

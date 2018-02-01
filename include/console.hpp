@@ -53,7 +53,10 @@ class Console
         NOINLINE
         void enable()
         {
-            Console **ptr; for (ptr = &list; *ptr; ptr = &(*ptr)->next) ; *ptr = this;
+            Console **ptr = &list;
+            while (*ptr)
+                ptr = &(*ptr)->next;
+            *ptr = this;
         }
 
     public:

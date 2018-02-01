@@ -36,9 +36,6 @@ void Ec::load_fpu()
 
 void Ec::save_fpu()
 {
-    if (EXPECT_FALSE (!this))
-        return;
-
     if (!utcb)
         regs.fpu_ctrl (false);
 

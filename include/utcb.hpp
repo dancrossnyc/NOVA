@@ -56,35 +56,35 @@ class Utcb_head
 class Utcb_data
 {
     protected:
-        union {
-            struct {
-                mword           mtd, inst_len, rip, rflags;
-                uint32          intr_state, actv_state;
-                union {
-                    struct {
-                        uint32  intr_info, intr_error;
-                    };
-                    uint64      inj;
+        struct {
+            mword           mtd, inst_len, rip, rflags;
+            uint32          intr_state, actv_state;
+            union {
+                struct {
+                    uint32  intr_info, intr_error;
                 };
-
-                mword           rax, rcx, rdx, rbx, rsp, rbp, rsi, rdi;
-#ifdef __x86_64__
-                mword           r8,  r9,  r10, r11, r12, r13, r14, r15;
-#endif
-                uint64          qual[2];
-                uint32          ctrl[2];
-                uint64          reserved;
-                mword           cr0, cr2, cr3, cr4;
-#ifdef __x86_64__
-                mword           cr8, efer;
-#endif
-                mword           dr7, sysenter_cs, sysenter_rsp, sysenter_rip;
-                Utcb_segment    es, cs, ss, ds, fs, gs, ld, tr, gd, id;
-                uint64          tsc_val, tsc_off;
+                uint64      inj;
             };
 
-            mword mr[];
+            mword           rax, rcx, rdx, rbx, rsp, rbp, rsi, rdi;
+#ifdef __x86_64__
+            mword           r8,  r9,  r10, r11, r12, r13, r14, r15;
+#endif
+            uint64          qual[2];
+            uint32          ctrl[2];
+            uint64          reserved;
+            mword           cr0, cr2, cr3, cr4;
+#ifdef __x86_64__
+            mword           cr8, efer;
+#endif
+            mword           dr7, sysenter_cs, sysenter_rsp, sysenter_rip;
+            Utcb_segment    es, cs, ss, ds, fs, gs, ld, tr, gd, id;
+            uint64          tsc_val, tsc_off;
         };
+
+        void save_data(Utcb_data *dst) {
+            *dst = *this;
+        }
 };
 
 class Utcb : public Utcb_head, private Utcb_data
@@ -109,16 +109,8 @@ class Utcb : public Utcb_head, private Utcb_data
         ALWAYS_INLINE NONNULL
         inline void save (Utcb *dst)
         {
-            register mword n = ui();
-
             dst->items = items;
-#if 0
-            mword *d = dst->mr, *s = mr;
-            asm volatile ("rep; movsl" : "+D" (d), "+S" (s), "+c" (n) : : "memory");
-#else
-            for (unsigned long i = 0; i < n; i++)
-                dst->mr[i] = mr[i];
-#endif
+            save_data(dst);
         }
 
         ALWAYS_INLINE

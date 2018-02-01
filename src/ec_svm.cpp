@@ -56,6 +56,7 @@ void Ec::svm_exception (mword reason)
         case 0x47:          // #NM
             handle_exc_nm();
             ret_user_vmrun();
+            [[fallthrough]];
 
         case 0x4e:          // #PF
             mword err = static_cast<mword>(current->regs.vmcb->exitinfo1);
@@ -71,10 +72,13 @@ void Ec::svm_exception (mword reason)
                 case Vtlb::GLA_GPA:
                     current->regs.vmcb->cr2 = cr2;
                     current->regs.vmcb->inj_control = static_cast<uint64>(err) << 32 | 0x80000b0e;
+                    [[fallthrough]];
 
                 case Vtlb::SUCCESS:
                     ret_user_vmrun();
+                    [[fallthrough]];
             }
+            [[fallthrough]];
     }
 
     send_msg<ret_user_vmrun>();
@@ -165,16 +169,20 @@ void Ec::handle_svm()
 
         case 0x0 ... 0x1f:      // CR Access
             svm_cr();
+            [[fallthrough]];
 
         case 0x40 ... 0x5f:     // Exception
             svm_exception (reason);
+            [[fallthrough]];
 
         case 0x60:              // EXTINT
             asm volatile ("sti; nop; cli" : : : "memory");
             ret_user_vmrun();
+            [[fallthrough]];
 
         case 0x79:              // INVLPG
             svm_invlpg();
+            [[fallthrough]];
     }
 
     current->regs.dst_portal = reason;

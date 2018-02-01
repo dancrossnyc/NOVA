@@ -29,6 +29,29 @@ class Vmcb;
 class Vmcs;
 class Vtlb;
 
+enum
+{
+#ifdef __x86_64__
+        R15,
+        R14,
+        R13,
+        R12,
+        R11,
+        R10,
+        R9,
+        R8,
+#endif
+        DI,
+        SI,
+        BP,
+        CR2,
+        BX,
+        DX,
+        CX,
+        AX,
+        LAST_REG,
+};
+
 class Sys_regs
 {
     public:
@@ -53,7 +76,7 @@ class Sys_regs
                 mword   REG(cx);
                 mword   REG(ax);
             };
-            mword gpr[];
+            mword gpr[LAST_REG];
         };
 
         enum Status

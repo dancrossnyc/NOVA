@@ -18,8 +18,8 @@
 # GNU General Public License version 2 for more details.
 #
 
-ARCH		?= x86_32
-CC		:= gcc
+ARCH		:= x86_64
+CXX		:= gcc
 ECHO		:= echo
 INSTALL		:= install
 LD		:= ld
@@ -41,9 +41,12 @@ message = @$(ECHO) $(1) $(2)
 endif
 
 # Feature check
-check = $(shell if $(CC) $(1) -c -xc++ /dev/null -o /dev/null >/dev/null 2>&1; then echo "$(1)"; fi)
+check = $(shell if $(CXX) $(1) -c -xc++ /dev/null -o /dev/null >/dev/null 2>&1; then echo "$(1)"; fi)
 
 gitrv = $(shell (git rev-parse HEAD 2>/dev/null || echo 0) | cut -c1-7)
+
+# Language options
+LANGFLAGS	:= -std=c++17
 
 # Preprocessor options
 DEFINES		:=
@@ -56,13 +59,13 @@ OFLAGS		:= -Os
 ifeq ($(ARCH),x86_32)
 AFLAGS		:= -m32 -march=i686 -mpreferred-stack-boundary=2 -mregparm=3
 else ifeq ($(ARCH),x86_64)
-AFLAGS		:= -m64 -march=core2 -mpreferred-stack-boundary=4 -mcmodel=kernel -mno-red-zone
+AFLAGS		:= -m64 -march=haswell -mcmodel=kernel -mno-red-zone -fno-pic #-mpreferred-stack-boundary=4
 else
 $(error $(ARCH) is not a valid architecture)
 endif
 
 # Language options
-FFLAGS		:= -fdata-sections -ffunction-sections -fomit-frame-pointer -freg-struct-return -freorder-blocks -funit-at-a-time
+FFLAGS		:= -fdata-sections -ffunction-sections -fomit-frame-pointer -funit-at-a-time # -freg-struct-return -freorder-blocks
 FFLAGS		+= -fno-asynchronous-unwind-tables -fno-exceptions -fno-rtti
 FFLAGS		+= $(call check,-fno-stack-protector)
 FFLAGS		+= $(call check,-fvisibility-inlines-hidden)
@@ -70,18 +73,21 @@ FFLAGS		+= $(call check,-fdiagnostics-color=auto)
 FFLAGS		+= $(or $(call check,-std=gnu++11), $(call check,-std=gnu++0x), $(call check,-std=gnu++98))
 
 # Warning options
-WFLAGS		:= -Wall -Wextra -Waggregate-return -Wcast-align -Wcast-qual -Wconversion -Wdisabled-optimization -Wformat=2 -Wmissing-format-attribute -Wmissing-noreturn -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wwrite-strings
-WFLAGS		+= -Wabi -Wctor-dtor-privacy -Wno-non-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wsign-promo
-WFLAGS		+= $(call check,-Wframe-larger-than=64)
-WFLAGS		+= $(call check,-Wlogical-op)
-WFLAGS		+= $(call check,-Wstrict-null-sentinel)
-WFLAGS		+= $(call check,-Wstrict-overflow=5)
-WFLAGS		+= $(call check,-Wvolatile-register-var)
-WFLAGS		+= $(call check,-Wzero-as-null-pointer-constant)
+WFLAGS		:= -Wall -Wextra
+WFLAGS		+= $(call check,-Wno-attributes)
+#WFLAGS		+= -Waggregate-return -Wcast-align -Wcast-qual -Wconversion -Wdisabled-optimization -Wformat=2 -Wmissing-format-attribute -Wmissing-noreturn -Wpacked -Wpointer-arith -Wredundant-decls -Wshadow -Wwrite-strings
+#WFLAGS		+= -Wabi -Wctor-dtor-privacy -Wno-non-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wsign-promo
+#WFLAGS		+= $(call check,-Wframe-larger-than=64)
+#WFLAGS		+= $(call check,-Wlogical-op)
+#WFLAGS		+= $(call check,-Wstrict-null-sentinel)
+#WFLAGS		+= $(call check,-Wstrict-overflow=5)
+#WFLAGS		+= $(call check,-Wvolatile-register-var)
+#WFLAGS		+= $(call check,-Wzero-as-null-pointer-constant)
+WFLAGS		+= -Werror
 
 # Compiler flags
-SFLAGS		:= $(PFLAGS) $(DFLAGS) $(AFLAGS)
-CFLAGS		:= $(PFLAGS) $(DFLAGS) $(AFLAGS) $(OFLAGS) $(FFLAGS) $(WFLAGS)
+SFLAGS		:= $(LANGFLAGS) $(PFLAGS) $(DFLAGS) $(AFLAGS)
+CXXFLAGS	:= $(LANGFLAGS) $(PFLAGS) $(DFLAGS) $(AFLAGS) $(OFLAGS) $(FFLAGS) $(WFLAGS)
 
 # Linker flags
 LFLAGS		:= --defsym=GIT_VER=0x$(call gitrv) --gc-sections --warn-common -static -n -T
@@ -89,15 +95,15 @@ LFLAGS		:= --defsym=GIT_VER=0x$(call gitrv) --gc-sections --warn-common -static 
 # Rules
 %-$(ARCH).o:	%.ld $(MAKEFILE_LIST)
 		$(call message,PRE,$@)
-		$(CC) $(SFLAGS) -xc -E -P -MT $@ $< -o $@
+		$(CXX) $(SFLAGS) -xc -E -P -MT $@ $< -o $@
 
 %-$(ARCH).o:	%.S $(MAKEFILE_LIST)
 		$(call message,ASM,$@)
-		$(CC) $(SFLAGS) -c $< -o $@
+		$(CXX) $(SFLAGS) -c $< -o $@
 
 %-$(ARCH).o:	%.cpp $(MAKEFILE_LIST)
 		$(call message,CMP,$@)
-		$(CC) $(CFLAGS) -c $< -o $@
+		$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(TARGET):	$(OBJ)
 		$(call message,LNK,$@)

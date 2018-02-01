@@ -345,9 +345,9 @@ mword Exc_regs::svm_read_gpr (unsigned reg)
 void Exc_regs::svm_write_gpr (unsigned reg, mword val)
 {
     switch (reg) {
-        case 0:     vmcb->rax = val; return;
-        case 4:     vmcb->rsp = val; return;
-        default:    gpr[sizeof (Sys_regs) / sizeof (mword) - 1 - reg] = val; return;
+        case 0:     vmcb->rax = val; break;
+        case 4:     vmcb->rsp = val; break;
+        default:    gpr[sizeof (Sys_regs) / sizeof (mword) - 1 - reg] = val; break;
     }
 }
 

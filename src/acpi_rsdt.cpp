@@ -39,16 +39,22 @@ void Acpi_table_rsdt::parse (Paddr addr, size_t size) const
     unsigned long count = entries (size);
 
     Paddr table[count];
-    for (unsigned i = 0; i < count; i++)
-        table[i] = static_cast<Paddr>(size == sizeof (*xsdt) ? xsdt[i] : rsdt[i]);
+    if (size == sizeof *xsdt) {
+        const auto *rsdt = reinterpret_cast<const uint32 *>(xsdt);
+        for (size_t i = 0; i < count; i++)
+            table[i] = static_cast<Paddr>(rsdt[i]);
+    } else
+        for (size_t i = 0; i < count; i++)
+            table[i] = static_cast<Paddr>(xsdt[i]);
 
-    for (unsigned i = 0; i < count; i++) {
+    for (size_t i = 0; i < count; i++) {
 
         Acpi_table *acpi = static_cast<Acpi_table *>(Hpt::remap (table[i]));
 
         if (acpi->good_checksum (table[i]))
-            for (unsigned j = 0; j < sizeof map / sizeof *map; j++)
-                if (acpi->signature == map[j].sig)
-                    *map[j].ptr = table[i];
+            for (const auto &m : map) {
+                if (acpi->signature == m.sig)
+                    *m.ptr = table[i];
+            }
     }
 }

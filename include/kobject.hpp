@@ -49,6 +49,6 @@ class Kobject : public Mdb
         ALWAYS_INLINE
         inline Type type() const
         {
-            return EXPECT_TRUE (this) ? Type (objtype) : INVALID;
+            return Type (objtype);
         }
 };

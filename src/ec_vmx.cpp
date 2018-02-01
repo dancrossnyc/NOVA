@@ -52,10 +52,12 @@ void Ec::vmx_exception()
         case 0x202:         // NMI
             asm volatile ("int $0x2" : : : "memory");
             ret_user_vmresume();
+            [[fallthrough]];
 
         case 0x307:         // #NM
             handle_exc_nm();
             ret_user_vmresume();
+            [[fallthrough]];
 
         case 0x30e:         // #PF
             mword err = Vmcs::read (Vmcs::EXI_INTR_ERROR);
@@ -71,10 +73,13 @@ void Ec::vmx_exception()
                     current->regs.cr2 = cr2;
                     Vmcs::write (Vmcs::ENT_INTR_INFO,  intr_info & ~0x1000);
                     Vmcs::write (Vmcs::ENT_INTR_ERROR, err);
+                    [[fallthrough]];
 
                 case Vtlb::SUCCESS:
                     ret_user_vmresume();
+                    [[fallthrough]];
             }
+            [[fallthrough]];
     }
 
     send_msg<ret_user_vmresume>();
@@ -139,10 +144,10 @@ void Ec::handle_vmx()
     Counter::vmi[reason]++;
 
     switch (reason) {
-        case Vmcs::VMX_EXC_NMI:     vmx_exception();
-        case Vmcs::VMX_EXTINT:      vmx_extint();
-        case Vmcs::VMX_INVLPG:      vmx_invlpg();
-        case Vmcs::VMX_CR:          vmx_cr();
+        case Vmcs::VMX_EXC_NMI:     vmx_exception(); break;
+        case Vmcs::VMX_EXTINT:      vmx_extint(); break;
+        case Vmcs::VMX_INVLPG:      vmx_invlpg(); break;
+        case Vmcs::VMX_CR:          vmx_cr(); break;
         case Vmcs::VMX_EPT_VIOLATION:
             current->regs.nst_error = Vmcs::read (Vmcs::EXI_QUALIFICATION);
             current->regs.nst_fault = Vmcs::read (Vmcs::INFO_PHYS_ADDR);

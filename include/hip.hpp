@@ -52,7 +52,7 @@ class Hip_mem
 
 class Hip
 {
-    private:
+    public:
         uint32  signature;              // 0x0
         uint16  checksum;               // 0x4
         uint16  length;                 // 0x6
@@ -73,7 +73,6 @@ class Hip
         Hip_cpu cpu_desc[NUM_CPU];
         Hip_mem mem_desc[];
 
-    public:
         enum Feature {
             FEAT_IOMMU  = 1U << 0,
             FEAT_VMX    = 1U << 1,

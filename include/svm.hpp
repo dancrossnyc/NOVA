@@ -122,7 +122,7 @@ class Vmcb
         ALWAYS_INLINE
         inline Vmcb()
         {
-            asm volatile ("vmsave" : : "a" (Buddy::ptr_to_phys (this)) : "memory");
+            asm volatile ("vmsave %0" : : "a" (Buddy::ptr_to_phys (this)) : "memory");
         }
 
         ALWAYS_INLINE

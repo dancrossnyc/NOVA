@@ -68,11 +68,10 @@ class Descriptor
 #pragma pack(1)
 class Pseudo_descriptor
 {
-    private:
+    public:
         uint16  limit;
         mword   base;
 
-    public:
         ALWAYS_INLINE
         inline Pseudo_descriptor (mword l, mword b) : limit (static_cast<uint16>(l)), base (b) {}
 };

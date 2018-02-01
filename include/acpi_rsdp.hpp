@@ -27,7 +27,7 @@
  */
 class Acpi_rsdp
 {
-    private:
+    public:
         uint32  signature[2];
         uint8   checksum;
         char    oem_id[6];
@@ -57,7 +57,6 @@ class Acpi_rsdp
         INIT
         static Acpi_rsdp *find (mword, unsigned);
 
-    public:
         INIT
         static void parse();
 };

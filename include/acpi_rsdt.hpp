@@ -27,7 +27,10 @@
  */
 class Acpi_table_rsdt : public Acpi_table
 {
-    private:
+    public:
+        INIT
+        void parse (Paddr, size_t) const;
+
         static struct table_map
         {
             uint32  const sig;
@@ -39,15 +42,7 @@ class Acpi_table_rsdt : public Acpi_table
             return (length - sizeof (Acpi_table)) / size;
         }
 
-    public:
-        union
-        {
-            uint32  rsdt[];
-            uint64  xsdt[];
-        };
-
-        INIT
-        void parse (Paddr, size_t) const;
+        uint64  xsdt[];
 };
 
 #pragma pack()
