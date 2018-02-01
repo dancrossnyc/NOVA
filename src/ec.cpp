@@ -79,7 +79,7 @@ Ec::Ec (Pd *own, mword sel, Pd *p, void (*f)(), unsigned c, unsigned e, mword u,
 
             regs.nst_ctrl<Vmcs>();
             regs.vmcs->clear();
-            cont = send_msg<ret_user_vmresume>;
+            cont = send_msg_ret_user_vmresume;
             trace (TRACE_SYSCALL, "EC:%p created (PD:%p VMCS:%p VTLB:%p)", this, p, regs.vmcs, regs.vtlb);
 
         } else if (Hip::feature() & Hip::FEAT_SVM) {
@@ -87,7 +87,7 @@ Ec::Ec (Pd *own, mword sel, Pd *p, void (*f)(), unsigned c, unsigned e, mword u,
             regs.REG(ax) = Buddy::ptr_to_phys (regs.vmcb = new Vmcb (pd->Space_pio::walk(), pd->npt.root()));
 
             regs.nst_ctrl<Vmcb>();
-            cont = send_msg<ret_user_vmrun>;
+            cont = send_msg_ret_user_vmrun;
             trace (TRACE_SYSCALL, "EC:%p created (PD:%p VMCB:%p VTLB:%p)", this, p, regs.vmcb, regs.vtlb);
         }
     }
@@ -108,19 +108,19 @@ void Ec::handle_hazard (mword hzd, void (*func)())
 
         if (func == ret_user_vmresume) {
             current->regs.dst_portal = NUM_VMI - 1;
-            send_msg<ret_user_vmresume>();
+            send_msg_ret_user_vmresume();
         }
 
         if (func == ret_user_vmrun) {
             current->regs.dst_portal = NUM_VMI - 1;
-            send_msg<ret_user_vmrun>();
+            send_msg_ret_user_vmrun();
         }
 
         if (func == ret_user_sysexit)
             current->redirect_to_iret();
 
         current->regs.dst_portal = NUM_EXC - 1;
-        send_msg<ret_user_iret>();
+        send_msg_ret_user_iret();
     }
 
     if (hzd & HZD_STEP) {
@@ -130,7 +130,7 @@ void Ec::handle_hazard (mword hzd, void (*func)())
             current->redirect_to_iret();
 
         current->regs.dst_portal = Cpu::EXC_DB;
-        send_msg<ret_user_iret>();
+        send_msg_ret_user_iret();
     }
 
     if (hzd & HZD_TSC) {
@@ -221,20 +221,24 @@ void Ec::ret_user_vmrun()
             current->regs.vtlb->flush (true);
     }
 
-    asm volatile ("lea %0," EXPAND (PREG(sp); LOAD_GPR)
+    asm volatile ("lea %0," EXPAND (PREG(sp);)
+                  EXPAND (LOAD_GPR)
                   "clgi;"
                   "sti;"
-                  "vmload;"
-                  "vmrun;"
-                  "vmsave;"
+                  "vmload " EXPAND(PREG(ax);)
+                  "vmrun " EXPAND(PREG(ax);)
+                  "vmsave " EXPAND(PREG(ax);)
                   EXPAND (SAVE_GPR)
                   "mov %1," EXPAND (PREG(ax);)
                   "mov %2," EXPAND (PREG(sp);)
-                  "vmload;"
+                  "vmload " EXPAND(PREG(ax);)
                   "cli;"
                   "stgi;"
                   "jmp svm_handler;"
-                  : : "m" (current->regs), "m" (Vmcb::root), "i" (CPU_LOCAL_STCK + PAGE_SIZE) : "memory");
+                  : : "m" (current->regs),
+                      "m" (Vmcb::root),
+                      "i" (CPU_LOCAL_STCK + PAGE_SIZE)
+                  : "memory");
 
     UNREACHED;
 }

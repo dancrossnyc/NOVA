@@ -81,7 +81,7 @@ void Ec::svm_exception (mword reason)
             [[fallthrough]];
     }
 
-    send_msg<ret_user_vmrun>();
+    send_msg_ret_user_vmrun();
 }
 
 void Ec::svm_invlpg()
@@ -187,5 +187,5 @@ void Ec::handle_svm()
 
     current->regs.dst_portal = reason;
 
-    send_msg<ret_user_vmrun>();
+    send_msg_ret_user_vmrun();
 }

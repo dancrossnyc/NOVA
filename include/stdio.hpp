@@ -20,24 +20,19 @@
 
 #pragma once
 
+#include "arch.hpp"
 #include "console.hpp"
 #include "cpu.hpp"
 #include "memory.hpp"
 
-#ifdef __x86_64__
-#define SP "%%rsp"
-#else
-#define SP "%%esp"
-#endif
-
-#define trace(T,format,...)                                         \
-do {                                                                \
-    mword __sp;                                                     \
-    asm volatile ("mov " SP ", (%0);" : "=r"(__sp) : : );           \
-    if (EXPECT_FALSE ((trace_mask & (T)) == (T)))                   \
-        Console::print ("[%2ld] " format,                           \
-                static_cast<long>(((__sp - 1) & ~PAGE_MASK) ==      \
-                CPU_LOCAL_STCK ? Cpu::id : ~0UL), ## __VA_ARGS__);  \
+#define trace(T,format,...)                                           \
+do {                                                                  \
+    mword __sp;                                                       \
+    asm volatile ("mov " EXPAND(PREG(sp)) ", %0;" : "=r"(__sp) ::); \
+    if (EXPECT_FALSE ((trace_mask & (T)) == (T)))                     \
+        Console::print ("[%2ld] " format,                             \
+                static_cast<long>(((__sp - 1) & ~PAGE_MASK) ==        \
+                CPU_LOCAL_STCK ? Cpu::id : ~0UL), ## __VA_ARGS__);    \
 } while (0)
 
 /*

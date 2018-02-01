@@ -39,13 +39,14 @@ void Acpi_table_rsdt::parse (Paddr addr, size_t size) const
     unsigned long count = entries (size);
 
     Paddr table[count];
-    if (size == sizeof *xsdt) {
+    if (size == sizeof(uint64))
+        for (size_t i = 0; i < count; i++)
+            table[i] = static_cast<Paddr>(xsdt[i]);
+    else {
         const auto *rsdt = reinterpret_cast<const uint32 *>(xsdt);
         for (size_t i = 0; i < count; i++)
             table[i] = static_cast<Paddr>(rsdt[i]);
-    } else
-        for (size_t i = 0; i < count; i++)
-            table[i] = static_cast<Paddr>(xsdt[i]);
+    }
 
     for (size_t i = 0; i < count; i++) {
 

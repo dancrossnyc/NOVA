@@ -77,8 +77,7 @@ void Ec::delegate()
     C ? ret_user_sysexit() : reply();
 }
 
-template <void (*C)()>
-void Ec::send_msg()
+void Ec::send_msg(void (*thunk)(void), void (*c)(void))
 {
     Exc_regs *r = &current->regs;
 
@@ -93,7 +92,7 @@ void Ec::send_msg()
         die ("PT wrong CPU");
 
     if (EXPECT_TRUE (!ec->cont)) {
-        current->cont = C;
+        current->cont = c;
         current->set_partner (ec);
         current->regs.mtd = pt->mtd.val;
         ec->cont = recv_kern;
@@ -102,7 +101,7 @@ void Ec::send_msg()
         ec->make_current();
     }
 
-    ec->help (send_msg<C>);
+    ec->help (thunk);
 
     die ("IPC Timeout");
 }
@@ -264,7 +263,9 @@ void Ec::sys_create_ec()
         sys_finish<Sys_regs::BAD_PAR>();
     }
 
-    Ec *ec = new Ec (Pd::current, r->sel(), pd, r->flags() & 1 ? static_cast<void (*)()>(send_msg<ret_user_iret>) : nullptr, r->cpu(), r->evt(), r->utcb(), r->esp());
+    Ec *ec = new Ec (Pd::current, r->sel(), pd,
+                     r->flags() & 1 ? send_msg_ret_user_iret : nullptr,
+                     r->cpu(), r->evt(), r->utcb(), r->esp());
 
     if (!Space_obj::insert_root (ec)) {
         trace (TRACE_ERROR, "%s: Non-NULL CAP (%#lx)", __func__, r->sel());
@@ -563,7 +564,22 @@ void (*const syscall[])() =
     &Ec::sys_finish<Sys_regs::BAD_HYP>,
 };
 
+NORETURN
+void send_msg_ret_user_vmresume()
+{
+    Ec::send_msg(send_msg_ret_user_vmresume, &Ec::ret_user_vmresume);
+}
+
+NORETURN
+void send_msg_ret_user_vmrun()
+{
+    Ec::send_msg(send_msg_ret_user_vmrun, &Ec::ret_user_vmrun);
+}
+
+NORETURN
+void send_msg_ret_user_iret()
+{
+    Ec::send_msg(send_msg_ret_user_iret, &Ec::ret_user_iret);
+}
+
 template void Ec::sys_finish<Sys_regs::COM_ABT>();
-template void Ec::send_msg<Ec::ret_user_vmresume>();
-template void Ec::send_msg<Ec::ret_user_vmrun>();
-template void Ec::send_msg<Ec::ret_user_iret>();

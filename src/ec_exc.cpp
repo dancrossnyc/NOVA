@@ -163,7 +163,7 @@ void Ec::handle_exc (Exc_regs *r)
     }
 
     if (r->user())
-        send_msg<ret_user_iret>();
+        send_msg_ret_user_iret();
 
     die ("EXC", r);
 }

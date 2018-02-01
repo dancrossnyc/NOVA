@@ -19,7 +19,7 @@
 #
 
 ARCH		:= x86_64
-CXX		:= gcc
+CXX		:= g++
 ECHO		:= echo
 INSTALL		:= install
 LD		:= ld
@@ -59,13 +59,13 @@ OFLAGS		:= -Os
 ifeq ($(ARCH),x86_32)
 AFLAGS		:= -m32 -march=i686 -mpreferred-stack-boundary=2 -mregparm=3
 else ifeq ($(ARCH),x86_64)
-AFLAGS		:= -m64 -march=haswell -mcmodel=kernel -mno-red-zone -fno-pic #-mpreferred-stack-boundary=4
+AFLAGS		:= -m64 -march=core2 -mcmodel=kernel -mno-red-zone -fno-pic #-mpreferred-stack-boundary=4
 else
 $(error $(ARCH) is not a valid architecture)
 endif
 
 # Language options
-FFLAGS		:= -fdata-sections -ffunction-sections -fomit-frame-pointer -funit-at-a-time # -freg-struct-return -freorder-blocks
+FFLAGS		:= -fdata-sections -ffunction-sections -fomit-frame-pointer -funit-at-a-time #-freg-struct-return -freorder-blocks
 FFLAGS		+= -fno-asynchronous-unwind-tables -fno-exceptions -fno-rtti
 FFLAGS		+= $(call check,-fno-stack-protector)
 FFLAGS		+= $(call check,-fvisibility-inlines-hidden)
@@ -108,6 +108,7 @@ LFLAGS		:= --defsym=GIT_VER=0x$(call gitrv) --gc-sections --warn-common -static 
 $(TARGET):	$(OBJ)
 		$(call message,LNK,$@)
 		$(LD) $(LFLAGS) $^ -o $@
+		objcopy -I elf64-x86-64 -O elf32-i386  $@ $@.32bit
 
 .PHONY:		install
 .PHONY:		clean

@@ -82,7 +82,7 @@ void Ec::vmx_exception()
             [[fallthrough]];
     }
 
-    send_msg<ret_user_vmresume>();
+    send_msg_ret_user_vmresume();
 }
 
 void Ec::vmx_extint()
@@ -156,5 +156,5 @@ void Ec::handle_vmx()
 
     current->regs.dst_portal = reason;
 
-    send_msg<ret_user_vmresume>();
+    send_msg_ret_user_vmresume();
 }

@@ -192,7 +192,8 @@ class Ec : public Kobject, public Refcount, public Queue<Sc>
         {
             if (EXPECT_TRUE (cont != dead)) {
 
-                Counter::print<1,16> (++Counter::helping, Console_vga::COLOR_LIGHT_WHITE, SPN_HLP);
+                Counter::print<1,16> (++Counter::helping,
+                                      Console_vga::COLOR_LIGHT_WHITE, SPN_HLP);
                 current->cont = c;
 
                 if (EXPECT_TRUE (++Sc::ctr_loop < 100))
@@ -245,9 +246,8 @@ class Ec : public Kobject, public Refcount, public Queue<Sc>
         NORETURN
         void activate();
 
-        template <void (*C)()>
         NORETURN
-        static void send_msg();
+        static void send_msg(void (*thunk)(void), void (*c)(void));
 
         HOT NORETURN
         static void recv_kern();
@@ -325,3 +325,7 @@ class Ec : public Kobject, public Refcount, public Queue<Sc>
         ALWAYS_INLINE
         static inline void operator delete (void *ptr) { cache.free (ptr); }
 };
+
+NORETURN void send_msg_ret_user_vmresume(void);
+NORETURN void send_msg_ret_user_vmrun(void);
+NORETURN void send_msg_ret_user_iret(void);
